@@ -19,7 +19,7 @@ export class FindVehicleUseCase {
     const vehicle = await this.vehicleRepository.findById(id);
 
     if (!vehicle) {
-      throw new NotFoundException(`Vehicle com id "${id}" não encontrado`);
+      throw new NotFoundException(`Vehicle with id "${id}" not found`);
     }
 
     return vehicle;
