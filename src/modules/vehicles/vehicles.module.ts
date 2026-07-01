@@ -9,9 +9,15 @@ import { UpdateVehicleUseCase } from './application/usecases/update-vehicle.usec
 import { DeleteVehicleUseCase } from './application/usecases/delete-vehicle.usecase';
 import { VEHICLE_REPOSITORY } from './application/repositories/vehicle.repository.interface';
 import { VehicleTypeOrmRepository } from './infra/data/typeorm/vehicle.typeorm.repository';
+import { VEHICLE_CACHE } from './application/cache/vehicle-cache.interface';
+import { VehicleRedisCacheService } from './infra/cache/vehicle-redis-cache.service';
+import { VehicleCachedRepository } from './infra/data/typeorm/vehicle-cached.repository';
+import { CacheModule } from 'src/shared/cache/cache.module';
+
+const VEHICLE_REPOSITORY_TYPEORM = 'VEHICLE_REPOSITORY_TYPEORM';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Vehicle]), ModelsModule],
+  imports: [TypeOrmModule.forFeature([Vehicle]), ModelsModule, CacheModule],
   controllers: [VehiclesController],
   providers: [
     // == Use Cases ==
@@ -21,8 +27,19 @@ import { VehicleTypeOrmRepository } from './infra/data/typeorm/vehicle.typeorm.r
     DeleteVehicleUseCase,
     // == Repositories ==
     {
-      provide: VEHICLE_REPOSITORY,
+      provide: VEHICLE_REPOSITORY_TYPEORM,
       useClass: VehicleTypeOrmRepository,
+    },
+    {
+      provide: VEHICLE_CACHE,
+      useClass: VehicleRedisCacheService,
+    },
+    {
+      provide: VEHICLE_REPOSITORY,
+      useFactory: (repository, cache) => {
+        return new VehicleCachedRepository(repository, cache);
+      },
+      inject: [VEHICLE_REPOSITORY_TYPEORM, VEHICLE_CACHE],
     },
   ],
 })
