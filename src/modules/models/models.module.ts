@@ -24,5 +24,6 @@ import { ModelTypeOrmRepository } from './infra/data/typeorm/model.typeorm.repos
       useClass: ModelTypeOrmRepository,
     },
   ],
+  exports: [MODEL_REPOSITORY],
 })
 export class ModelsModule {}
