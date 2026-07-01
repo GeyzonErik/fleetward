@@ -5,6 +5,9 @@ import databaseConfig from './shared/database/typeorm.config';
 import { ModelsModule } from './modules/models/models.module';
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
 import { UsersModule } from './modules/users/users.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './modules/auth/api/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -20,8 +23,14 @@ import { UsersModule } from './modules/users/users.module';
     ModelsModule,
     VehiclesModule,
     UsersModule,
+    AuthModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
   controllers: [],
-  providers: [],
 })
 export class AppModule {}
