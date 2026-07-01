@@ -1,8 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { Model } from './model.entity';
 import { IModelRepository } from '../../../application/repositories/model.repository.interface';
+
+interface SqlDriverError {
+  driverError?: {
+    number?: number;
+  };
+}
 
 @Injectable()
 export class ModelTypeOrmRepository implements IModelRepository {
@@ -42,6 +52,27 @@ export class ModelTypeOrmRepository implements IModelRepository {
       throw new NotFoundException(`Model with id "${id}" not found`);
     }
 
-    await this.repository.delete(id);
+    try {
+      await this.repository.delete(id);
+    } catch (err) {
+      if (this.isForeignKeyViolation(err)) {
+        throw new ConflictException(
+          'Cannot remove this model because there are vehicles associated with it',
+        );
+      }
+
+      throw err;
+    }
+  }
+
+  private isForeignKeyViolation(error: unknown): boolean {
+    if (!(error instanceof QueryFailedError)) {
+      return false;
+    }
+
+    const dbError = error as unknown as SqlDriverError;
+    const sqlServerForeignKeyCode = 547;
+
+    return dbError.driverError?.number === sqlServerForeignKeyCode;
   }
 }
