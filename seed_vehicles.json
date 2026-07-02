@@ -1,0 +1,26 @@
+[
+  {
+    "brandName": "Chevrolet",
+    "modelName": "Onix",
+    "licensePlate": "ABC1D23",
+    "chassis": "9BWZZZ377VT004251",
+    "renavam": "12345678901",
+    "year": 2023
+  },
+  {
+    "brandName": "Hyundai",
+    "modelName": "HB20",
+    "licensePlate": "XYZ4E56",
+    "chassis": "9BWZZZ377VT004252",
+    "renavam": "12345678902",
+    "year": 2022
+  },
+  {
+    "brandName": "Chevrolet",
+    "modelName": "Onix",
+    "licensePlate": "QWE7F89",
+    "chassis": "9BWZZZ377VT004253",
+    "renavam": "12345678903",
+    "year": 2024
+  }
+]
