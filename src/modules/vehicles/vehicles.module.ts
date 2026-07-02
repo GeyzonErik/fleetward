@@ -13,11 +13,20 @@ import { VEHICLE_CACHE } from './application/cache/vehicle-cache.interface';
 import { VehicleRedisCacheService } from './infra/cache/vehicle-redis-cache.service';
 import { VehicleCachedRepository } from './infra/data/typeorm/vehicle-cached.repository';
 import { CacheModule } from 'src/shared/cache/cache.module';
+import { MessagingModule } from 'src/shared/messaging/messaging.module';
+import { VehicleCreatedConsumer } from './infra/messaging/vehicle-created.consumer';
+import { VEHICLE_EVENT_PUBLISHER } from './application/messaging/vehicle-event-publisher.interface';
+import { VehicleRabbitmqPublisher } from './infra/messaging/vehicle-rabbitmq-publisher.service';
 
 const VEHICLE_REPOSITORY_TYPEORM = 'VEHICLE_REPOSITORY_TYPEORM';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Vehicle]), ModelsModule, CacheModule],
+  imports: [
+    TypeOrmModule.forFeature([Vehicle]),
+    ModelsModule,
+    CacheModule,
+    MessagingModule,
+  ],
   controllers: [VehiclesController],
   providers: [
     // == Use Cases ==
@@ -25,6 +34,12 @@ const VEHICLE_REPOSITORY_TYPEORM = 'VEHICLE_REPOSITORY_TYPEORM';
     FindVehicleUseCase,
     UpdateVehicleUseCase,
     DeleteVehicleUseCase,
+    // == Messaging ==
+    VehicleCreatedConsumer,
+    {
+      provide: VEHICLE_EVENT_PUBLISHER,
+      useClass: VehicleRabbitmqPublisher,
+    },
     // == Repositories ==
     {
       provide: VEHICLE_REPOSITORY_TYPEORM,

@@ -2,6 +2,7 @@ import {
   ConflictException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -13,14 +14,22 @@ import {
   MODEL_REPOSITORY,
 } from '../../../models/application/repositories/model.repository.interface';
 import { CreateVehicleDto } from '../../api/dto/create-vehicle.dto';
+import {
+  IVehicleEventPublisher,
+  VEHICLE_EVENT_PUBLISHER,
+} from '../messaging/vehicle-event-publisher.interface';
 
 @Injectable()
 export class CreateVehicleUseCase {
+  private readonly logger = new Logger(CreateVehicleUseCase.name);
+
   constructor(
     @Inject(VEHICLE_REPOSITORY)
     private readonly vehicleRepository: IVehicleRepository,
     @Inject(MODEL_REPOSITORY)
     private readonly modelRepository: IModelRepository,
+    @Inject(VEHICLE_EVENT_PUBLISHER)
+    private readonly eventPublisher: IVehicleEventPublisher,
   ) {}
 
   async execute(dto: CreateVehicleDto, createdBy: string) {
@@ -42,6 +51,20 @@ export class CreateVehicleUseCase {
       );
     }
 
-    return this.vehicleRepository.create({ ...dto, createdBy });
+    const vehicle = await this.vehicleRepository.create({ ...dto, createdBy });
+
+    try {
+      await this.eventPublisher.publishVehicleCreated({
+        vehicleId: vehicle.id,
+        licensePlate: vehicle.licensePlate,
+        modelId: vehicle.modelId,
+        createdBy: vehicle.createdBy,
+        createdAt: vehicle.createdAt,
+      });
+    } catch (err) {
+      this.logger.error('Failed to publish vehicle created event', err);
+    }
+
+    return vehicle;
   }
 }
