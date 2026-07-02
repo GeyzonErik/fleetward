@@ -35,6 +35,8 @@ export default tseslint.config(
     files: ['**/*.spec.ts', '**/*.test.ts', '**/mocks/**/*.ts'],
     rules: {
       '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
     },
   },
 );
