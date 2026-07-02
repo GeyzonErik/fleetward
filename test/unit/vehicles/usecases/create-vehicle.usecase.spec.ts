@@ -5,11 +5,14 @@ import { VEHICLE_REPOSITORY } from '../../../../src/modules/vehicles/application
 import { MODEL_REPOSITORY } from '../../../../src/modules/models/application/repositories/model.repository.interface';
 import { createMockVehicleRepository } from '../../../mocks/vehicle-repository.mock';
 import { createMockModelRepository } from '../../../mocks/model-repository.mock';
+import { createMockVehicleEventPublisher } from '../../..//mocks/vehicle-event-publisher.mock';
+import { VEHICLE_EVENT_PUBLISHER } from '../../../../src/modules/vehicles/application/messaging/vehicle-event-publisher.interface';
 
 describe('CreateVehicleUseCase', () => {
   let useCase: CreateVehicleUseCase;
   let vehicleRepository: ReturnType<typeof createMockVehicleRepository>;
   let modelRepository: ReturnType<typeof createMockModelRepository>;
+  let eventPublisher: ReturnType<typeof createMockVehicleEventPublisher>;
 
   const dto = {
     licensePlate: 'ABC1D23',
@@ -22,12 +25,14 @@ describe('CreateVehicleUseCase', () => {
   beforeEach(async () => {
     vehicleRepository = createMockVehicleRepository();
     modelRepository = createMockModelRepository();
+    eventPublisher = createMockVehicleEventPublisher();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CreateVehicleUseCase,
         { provide: VEHICLE_REPOSITORY, useValue: vehicleRepository },
         { provide: MODEL_REPOSITORY, useValue: modelRepository },
+        { provide: VEHICLE_EVENT_PUBLISHER, useValue: eventPublisher },
       ],
     }).compile();
 
@@ -40,19 +45,36 @@ describe('CreateVehicleUseCase', () => {
       name: 'Onix',
     } as any);
     vehicleRepository.findByPlateOrChassisOrRenavam.mockResolvedValue(null);
-    vehicleRepository.create.mockResolvedValue({ id: 'v1', ...dto } as any);
+    const createdVehicle = {
+      id: 'v1',
+      ...dto,
+      createdBy: 'aivacol',
+      createdAt: new Date(),
+    };
+    vehicleRepository.create.mockResolvedValue(createdVehicle as any);
 
     const result = await useCase.execute(dto, 'aivacol');
 
     expect(modelRepository.findById).toHaveBeenCalledWith('model-1');
+
     expect(
       vehicleRepository.findByPlateOrChassisOrRenavam,
     ).toHaveBeenCalledWith(dto.licensePlate, dto.chassis, dto.renavam);
+
     expect(vehicleRepository.create).toHaveBeenCalledWith({
       ...dto,
       createdBy: 'aivacol',
     });
-    expect(result).toEqual({ id: 'v1', ...dto });
+
+    expect(eventPublisher.publishVehicleCreated).toHaveBeenCalledWith({
+      vehicleId: createdVehicle.id,
+      licensePlate: createdVehicle.licensePlate,
+      modelId: createdVehicle.modelId,
+      createdBy: createdVehicle.createdBy,
+      createdAt: createdVehicle.createdAt,
+    });
+
+    expect(result).toEqual(createdVehicle);
   });
 
   it('Should throw NotFoundException if the model does not exist', async () => {
@@ -65,7 +87,12 @@ describe('CreateVehicleUseCase', () => {
     expect(
       vehicleRepository.findByPlateOrChassisOrRenavam,
     ).not.toHaveBeenCalled();
+
     expect(vehicleRepository.create).not.toHaveBeenCalled();
+
+    expect(vehicleRepository.create).not.toHaveBeenCalled();
+
+    expect(eventPublisher.publishVehicleCreated).not.toHaveBeenCalled();
   });
 
   it(' Should throw ConflictException if a vehicle with the same license plate, chassis, or renavam already exists', async () => {
@@ -73,6 +100,7 @@ describe('CreateVehicleUseCase', () => {
       id: 'model-1',
       name: 'Onix',
     } as any);
+
     vehicleRepository.findByPlateOrChassisOrRenavam.mockResolvedValue({
       id: 'existing',
     } as any);
@@ -82,5 +110,31 @@ describe('CreateVehicleUseCase', () => {
     );
 
     expect(vehicleRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('Should return the created vehicle even if the event publication fails', async () => {
+    modelRepository.findById.mockResolvedValue({
+      id: 'model-1',
+      name: 'Onix',
+    } as any);
+
+    vehicleRepository.findByPlateOrChassisOrRenavam.mockResolvedValue(null);
+
+    const createdVehicle = {
+      id: 'v1',
+      ...dto,
+      createdBy: 'aivacol',
+      createdAt: new Date(),
+    };
+
+    vehicleRepository.create.mockResolvedValue(createdVehicle as any);
+
+    eventPublisher.publishVehicleCreated.mockRejectedValue(
+      new Error('RabbitMQ unavailable'),
+    );
+
+    const result = await useCase.execute(dto, 'aivacol');
+
+    expect(result).toEqual(createdVehicle);
   });
 });
