@@ -49,7 +49,7 @@ describe('FindModelUseCase', () => {
     it('Should throw NotFoundException when the model does not exist', async () => {
       modelRepository.findById.mockResolvedValue(null);
 
-      await expect(useCase.findById('id-inexistente')).rejects.toThrow(
+      await expect(useCase.findById('non-existent')).rejects.toThrow(
         NotFoundException,
       );
     });
