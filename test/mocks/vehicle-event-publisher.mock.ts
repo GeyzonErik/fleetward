@@ -3,5 +3,6 @@ import { IVehicleEventPublisher } from '../../src/modules/vehicles/application/m
 export function createMockVehicleEventPublisher(): jest.Mocked<IVehicleEventPublisher> {
   return {
     publishVehicleCreated: jest.fn(),
+    publishVehicleDeleted: jest.fn(),
   };
 }
