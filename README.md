@@ -60,6 +60,7 @@ pnpm start:dev
 ### Autenticação
 
 Usuário criado pelo seed:
+
 ```
 nickname: aivacol
 password: Aivacol@2026
@@ -74,6 +75,7 @@ curl -X POST http://localhost:3000/auth/login \
 ```
 
 A resposta traz um `accessToken`. Todas as demais rotas exigem o header:
+
 ```
 Authorization: Bearer <accessToken>
 ```
@@ -105,7 +107,9 @@ Authorization: Bearer <accessToken>
 | `MONGO_PORT`                     | Porta do MongoDB                                  |
 | `MONGO_DATABASE`                 | Banco usado para os logs de auditoria             |
 
-**Nota**: existe um `.env.docker` separado, usado apenas pelo serviço `app` dentro do `docker-compose.yml`. Ele contém os mesmos valores do `.env`, exceto que os campos `*_HOST` apontam para o nome dos serviços Docker (`sqlserver`, `redis`, `rabbitmq`, `mongodb`) em vez de `localhost`, isso necessário porque, dentro da rede interna do Compose, os containers se enxergam pelo nome do serviço, não por `localhost`.
+**Nota**: existe um `.env.docker` separado, usado apenas pelo serviço `app` dentro do `docker-compose.yml`. Ele contém os mesmos valores do `.env`, exceto que os campos `*_HOST` apontam para o nome dos serviços Docker (`sqlserver`, `redis`, `rabbitmq`, `mongodb`) em vez de `localhost`, isso é necessário porque, dentro da rede interna do Compose, os containers se enxergam pelo nome do serviço, não por `localhost`.
+
+Diferente do `.env`, o `.env.docker` **é versionado no repositório**, propositalmente. As credenciais nele são valores fixos de desenvolvimento local (não segredos reais de produção), e mantê-lo commitado permite que o fluxo `git clone` → `docker compose up -d --build` funcione de ponta a ponta sem passos manuais extras, o container `app` depende desse arquivo existir para saber como se conectar aos demais serviços. Em um cenário de produção real, esse arquivo seria substituído por variáveis de ambiente injetadas pela plataforma de deploy (ou um secret manager), nunca versionadas.
 
 ## Endpoints
 
@@ -150,6 +154,7 @@ Todas as rotas acima (exceto `/auth/login`) exigem autenticação via `Bearer to
 ## Arquitetura
 
 Cada módulo segue o fluxo:
+
 ```
 Controller → UseCase → Repository Interface → Repository (TypeORM)
 ```
