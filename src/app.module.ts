@@ -6,9 +6,11 @@ import { ModelsModule } from './modules/models/models.module';
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/api/guards/jwt-auth.guard';
 import { BrandsModule } from './modules/brands/brands.module';
+import { AuditModule } from './shared/audit/audit.module';
+import { AuditInterceptor } from './shared/audit/audit.interceptor';
 
 @Module({
   imports: [
@@ -26,11 +28,16 @@ import { BrandsModule } from './modules/brands/brands.module';
     UsersModule,
     AuthModule,
     BrandsModule,
+    AuditModule,
   ],
   providers: [
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
     },
   ],
   controllers: [],
