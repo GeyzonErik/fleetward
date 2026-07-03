@@ -46,7 +46,7 @@ export class VehiclesController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.deleteVehicleUseCase.execute(id);
+  async delete(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.deleteVehicleUseCase.execute(id, user.nickname);
   }
 }
