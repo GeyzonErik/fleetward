@@ -17,6 +17,7 @@ import { MessagingModule } from 'src/shared/messaging/messaging.module';
 import { VehicleCreatedConsumer } from './infra/messaging/vehicle-created.consumer';
 import { VEHICLE_EVENT_PUBLISHER } from './application/messaging/vehicle-event-publisher.interface';
 import { VehicleRabbitmqPublisher } from './infra/messaging/vehicle-rabbitmq-publisher.service';
+import { VehicleDeletedConsumer } from './infra/messaging/vehicle-deleted.consumer';
 
 const VEHICLE_REPOSITORY_TYPEORM = 'VEHICLE_REPOSITORY_TYPEORM';
 
@@ -36,6 +37,7 @@ const VEHICLE_REPOSITORY_TYPEORM = 'VEHICLE_REPOSITORY_TYPEORM';
     DeleteVehicleUseCase,
     // == Messaging ==
     VehicleCreatedConsumer,
+    VehicleDeletedConsumer,
     {
       provide: VEHICLE_EVENT_PUBLISHER,
       useClass: VehicleRabbitmqPublisher,
