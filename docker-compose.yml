@@ -42,6 +42,28 @@ services:
     ports:
       - '${RABBITMQ_PORT}:5672'
       - '15672:15672'
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fleetward-app
+    env_file:
+      - .env.docker
+    ports:
+      - '3000:3000'
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   sqlserver-data:

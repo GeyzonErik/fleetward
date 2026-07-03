@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
+import { join } from 'path';
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ export default new DataSource({
     encrypt: false,
     trustServerCertificate: true,
   },
-  entities: ['src/modules/**/*.entity{.ts,.js}'],
-  migrations: ['src/shared/database/migrations/*{.ts,.js}'],
+  entities: [join(__dirname, '../../modules/**/*.entity{.ts,.js}')],
+  migrations: [join(__dirname, 'migrations/*{.ts,.js}')],
   synchronize: false,
 });
